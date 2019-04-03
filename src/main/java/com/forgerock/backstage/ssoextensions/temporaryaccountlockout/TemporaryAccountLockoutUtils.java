@@ -19,6 +19,7 @@ package com.forgerock.backstage.ssoextensions.temporaryaccountlockout;
 
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.model.TemporaryAccountLockout;
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.time.TimeProvider;
+import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.iplanet.sso.SSOException;
@@ -33,8 +34,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
-import static com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller.marshal;
-import static com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller.unmarshal;
 import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
 import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
 
@@ -42,13 +41,15 @@ public class TemporaryAccountLockoutUtils {
 
     private final CoreWrapper coreWrapper;
     private final TimeProvider timeProvider;
+    private final TemporaryAccountLockoutMarshaller marshaller;
 
     public final static String LOCKOUT_ATTRIBUTE_NAME = "sunAMAuthInvalidAttemptsData";
 
     @Inject
-    public TemporaryAccountLockoutUtils(CoreWrapper coreWrapper, TimeProvider timeProvider) {
+    public TemporaryAccountLockoutUtils(CoreWrapper coreWrapper, TimeProvider timeProvider, TemporaryAccountLockoutMarshaller marshaller) {
         this.coreWrapper = coreWrapper;
         this.timeProvider = timeProvider;
+        this.marshaller = marshaller;
     }
 
     public TemporaryAccountLockout getAccountLockoutData(TreeContext context) throws IdRepoException, SSOException, JAXBException {
@@ -59,11 +60,11 @@ public class TemporaryAccountLockoutUtils {
         }
 
         Set<String> attribute = userIdentity.getAttribute(LOCKOUT_ATTRIBUTE_NAME);
-        return attribute.isEmpty() ? new TemporaryAccountLockout() : unmarshal(attribute.iterator().next());
+        return attribute.isEmpty() ? new TemporaryAccountLockout() : marshaller.unmarshal(attribute.iterator().next());
     }
 
     public void setAccountLockoutData(TreeContext context, TemporaryAccountLockout accountLockout) throws IdRepoException, SSOException, JAXBException {
-        String data = marshal(accountLockout);
+        String data = marshaller.marshal(accountLockout);
         AMIdentity userIdentity = getUserIdentity(context);
         userIdentity.setAttributes(ImmutableMap.of(LOCKOUT_ATTRIBUTE_NAME, ImmutableSet.of(data)));
         userIdentity.store();

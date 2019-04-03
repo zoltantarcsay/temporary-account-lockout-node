@@ -19,6 +19,7 @@ package com.forgerock.backstage.ssoextensions.temporaryaccountlockout.decision;
 
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.TemporaryAccountLockoutUtils;
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.time.TimeProvider;
+import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.sun.identity.idm.AMIdentity;
@@ -28,6 +29,7 @@ import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.core.CoreWrapper;
 import org.junit.Test;
 
+import javax.xml.bind.JAXBException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -46,10 +48,11 @@ public class TemporaryAccountLockoutDecisionTest {
     private final JsonValue sharedState = JsonValue.json(ImmutableMap.of(USERNAME, "demo", REALM, "/"));
     private final TreeContext mockContext = new TreeContext(sharedState, new ExternalRequestContext.Builder().build(), Collections.emptyList());
     private final TimeProvider mockTimeProvider = mock(TimeProvider.class);
-    private final TemporaryAccountLockoutUtils utils = new TemporaryAccountLockoutUtils(mockCoreWrapper, mockTimeProvider);
+    private final TemporaryAccountLockoutMarshaller marshaller = new TemporaryAccountLockoutMarshaller();
+    private final TemporaryAccountLockoutUtils utils = new TemporaryAccountLockoutUtils(mockCoreWrapper, mockTimeProvider, marshaller);
     private final Instant now = Instant.parse("2019-04-01T12:00:00.000Z");
 
-    public TemporaryAccountLockoutDecisionTest() {
+    public TemporaryAccountLockoutDecisionTest() throws JAXBException {
         when(mockCoreWrapper.getIdentity(anyString(), anyString())).then(invocation -> mockIdentity);
         when(mockTimeProvider.now()).thenReturn(now);
     }

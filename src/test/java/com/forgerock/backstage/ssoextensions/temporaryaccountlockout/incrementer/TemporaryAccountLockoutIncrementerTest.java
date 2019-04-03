@@ -20,6 +20,7 @@ package com.forgerock.backstage.ssoextensions.temporaryaccountlockout.incremente
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.TemporaryAccountLockoutUtils;
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.model.TemporaryAccountLockout;
 import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.time.TimeProvider;
+import com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.iplanet.sso.SSOException;
@@ -32,8 +33,9 @@ import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.core.CoreWrapper;
 import org.junit.Test;
 
+import javax.xml.bind.JAXBException;
+
 import static com.forgerock.backstage.ssoextensions.temporaryaccountlockout.TemporaryAccountLockoutUtils.LOCKOUT_ATTRIBUTE_NAME;
-import static com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller.*;
 import static org.junit.Assert.assertEquals;
 
 import java.time.Instant;
@@ -54,11 +56,11 @@ public class TemporaryAccountLockoutIncrementerTest {
     private final TreeContext mockContext = new TreeContext(sharedState, new ExternalRequestContext.Builder().build(), Collections.emptyList());
     private final TimeProvider mockTimeProvider = mock(TimeProvider.class);
     private final Instant now = Instant.parse("2019-04-01T12:00:00.000Z");
+    private final TemporaryAccountLockoutMarshaller marshaller = new TemporaryAccountLockoutMarshaller();
+    private final TemporaryAccountLockoutUtils utils = new TemporaryAccountLockoutUtils(mockCoreWrapper, mockTimeProvider, marshaller);
 
-    private final TemporaryAccountLockoutUtils utils = new TemporaryAccountLockoutUtils(mockCoreWrapper, mockTimeProvider);
 
-
-    public TemporaryAccountLockoutIncrementerTest() {
+    public TemporaryAccountLockoutIncrementerTest() throws JAXBException {
         when(mockCoreWrapper.getIdentity(anyString(), anyString())).then(invocation -> mockIdentity);
         when(mockTimeProvider.now()).thenReturn(now);
     }
@@ -67,7 +69,7 @@ public class TemporaryAccountLockoutIncrementerTest {
     public void shouldSetAttemptsToOneWhenEmpty() throws IdRepoException, SSOException, NodeProcessException {
         doAnswer(invocation -> {
             Map<String, Set<String>> attributes = invocation.getArgument(0);
-            TemporaryAccountLockout accountLockout = unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
+            TemporaryAccountLockout accountLockout = marshaller.unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
             assertEquals(accountLockout.getInvalidCount(), 1);
             assertEquals(accountLockout.getLastInvalidAt(), now);
             return null;
@@ -83,7 +85,7 @@ public class TemporaryAccountLockoutIncrementerTest {
 
         doAnswer(invocation -> {
             Map<String, Set<String>> attributes = invocation.getArgument(0);
-            TemporaryAccountLockout accountLockout = unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
+            TemporaryAccountLockout accountLockout = marshaller.unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
             assertEquals(accountLockout.getInvalidCount(), 4);
             assertEquals(accountLockout.getLastInvalidAt(), now);
             return null;
@@ -99,7 +101,7 @@ public class TemporaryAccountLockoutIncrementerTest {
 
         doAnswer(invocation -> {
             Map<String, Set<String>> attributes = invocation.getArgument(0);
-            TemporaryAccountLockout accountLockout = unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
+            TemporaryAccountLockout accountLockout = marshaller.unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
             assertEquals(accountLockout.getInvalidCount(), 3);
             assertEquals(accountLockout.getLastInvalidAt(), now);
             return null;
@@ -115,7 +117,7 @@ public class TemporaryAccountLockoutIncrementerTest {
 
         doAnswer(invocation -> {
             Map<String, Set<String>> attributes = invocation.getArgument(0);
-            TemporaryAccountLockout accountLockout = unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
+            TemporaryAccountLockout accountLockout = marshaller.unmarshal(attributes.get(LOCKOUT_ATTRIBUTE_NAME).iterator().next());
             assertEquals(accountLockout.getLockedOutAt(), now);
             return null;
         }).when(mockIdentity).setAttributes(anyMap());
@@ -148,6 +150,5 @@ public class TemporaryAccountLockoutIncrementerTest {
 
         return ImmutableSet.of(xml);
     }
-
 
 }

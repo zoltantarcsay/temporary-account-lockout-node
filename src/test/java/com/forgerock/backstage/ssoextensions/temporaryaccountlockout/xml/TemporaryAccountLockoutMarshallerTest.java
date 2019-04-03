@@ -24,22 +24,25 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.time.Instant;
 
-import static com.forgerock.backstage.ssoextensions.temporaryaccountlockout.xml.TemporaryAccountLockoutMarshaller.*;
 import static org.junit.Assert.*;
 
 public class TemporaryAccountLockoutMarshallerTest {
     private final int INVALID_COUNT = 3;
     private final String TIMESTAMP = "2019-04-03T09:27:39.674Z";
     private final long TIMESTAMP_MILLIS = 1554283659674L;
+    private final TemporaryAccountLockoutMarshaller marshaller = new TemporaryAccountLockoutMarshaller();
 
-    @Test
-    public void shouldMarshalAndMatchExpectedString() throws JAXBException {
-        assertEquals(marshal(getTemporaryAccountLockout()), getXml());
+    public TemporaryAccountLockoutMarshallerTest() throws JAXBException {
     }
 
     @Test
-    public void shouldUnMarshalAndMatchExpectedObject() throws JAXBException {
-        assertEquals(unmarshal(getXml()), getTemporaryAccountLockout());
+    public void shouldMarshalAndMatchExpectedString() throws JAXBException, IOException {
+        assertEquals(marshaller.marshal(getTemporaryAccountLockout()), getXml());
+    }
+
+    @Test
+    public void shouldUnMarshalAndMatchExpectedObject() throws JAXBException, IOException {
+        assertEquals(marshaller.unmarshal(getXml()), getTemporaryAccountLockout());
 
     }
 

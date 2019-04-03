@@ -25,8 +25,13 @@ import java.io.StringReader;
 import java.io.StringWriter;
 
 public class TemporaryAccountLockoutMarshaller {
-    public static String marshal(TemporaryAccountLockout accountLockout) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(TemporaryAccountLockout.class);
+    private final JAXBContext context;
+
+    public TemporaryAccountLockoutMarshaller() throws JAXBException {
+        context = JAXBContext.newInstance(TemporaryAccountLockout.class);
+    }
+
+    public String marshal(TemporaryAccountLockout accountLockout) throws JAXBException {
         Marshaller marshaller = context.createMarshaller();
         marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         marshaller.setProperty(Marshaller.JAXB_FRAGMENT, true);
@@ -37,8 +42,7 @@ public class TemporaryAccountLockoutMarshaller {
         return writer.toString();
     }
 
-    public static TemporaryAccountLockout unmarshal(String xml) throws JAXBException {
-        JAXBContext context = JAXBContext.newInstance(TemporaryAccountLockout.class);
+    public TemporaryAccountLockout unmarshal(String xml) throws JAXBException {
         Unmarshaller unmarshaller = context.createUnmarshaller();
         StreamSource source = new StreamSource(new StringReader(xml));
         JAXBElement<TemporaryAccountLockout> element = unmarshaller.unmarshal(source, TemporaryAccountLockout.class);
